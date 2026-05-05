@@ -143,8 +143,24 @@ st.markdown("""
 [data-testid="stHeader"]           { background-color: #0D1B2A; }
 [data-testid="stToolbar"]          { display: none; }
 
-* { font-family: 'Space Grotesk', sans-serif !important; }
+/* Apply Space Grotesk to content elements only — NOT to icon/SVG elements
+   so Streamlit's internal Material Icons don't render as literal text */
+body, p, h1, h2, h3, h4, h5, h6, li, td, th, a,
+input, textarea, button, select, label, caption,
+.stMarkdown, .stButton > button, .stSelectbox,
+.stTextInput, .stTextArea, .stSidebar, .stTabs,
+[data-testid="stCaptionContainer"],
+[data-testid="stMarkdownContainer"] {
+    font-family: 'Space Grotesk', sans-serif !important;
+}
 code, pre { font-family: 'JetBrains Mono', monospace !important; }
+
+/* Restore Material Icons font — prevents arrow_right text bleed-through */
+.material-icons,
+[data-testid="stExpanderToggleIcon"],
+[data-testid="stExpanderToggleIcon"] * {
+    font-family: 'Material Icons' !important;
+}
 
 h1, h2, h3, h4 { color: #E8F4FD !important; font-weight: 800 !important; }
 
@@ -180,12 +196,31 @@ h1, h2, h3, h4 { color: #E8F4FD !important; font-weight: 800 !important; }
     background: #0A1520 !important; border-color: #1A2E45 !important; color: #E8F4FD !important;
 }
 
-/* EXPANDER */
+/* EXPANDER — fixed arrow rendering */
 .streamlit-expanderHeader {
-    background: #0A1520 !important; color: #8899AA !important;
-    border-radius: 8px !important; border: 1px solid #1A2E45 !important;
+    background: #0A1520 !important;
+    color: #8899AA !important;
+    border-radius: 8px !important;
+    border: 1px solid #1A2E45 !important;
+    font-family: 'Space Grotesk', sans-serif !important;
 }
-.streamlit-expanderContent { background: #0A1520 !important; border: 1px solid #1A2E45 !important; }
+/* Keep the SVG chevron arrow visible and properly sized */
+.streamlit-expanderHeader svg {
+    color: #5A7A9A !important;
+    flex-shrink: 0;
+}
+/* Prevent Material Icons text from bleeding through expander label */
+.streamlit-expanderHeader p,
+.streamlit-expanderHeader span:not(.material-icons) {
+    font-family: 'Space Grotesk', sans-serif !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.streamlit-expanderContent {
+    background: #0A1520 !important;
+    border: 1px solid #1A2E45 !important;
+    border-top: none !important;
+}
 
 /* ALERTS */
 .stSuccess { background:#003320!important;border:1px solid #00C896!important;color:#00C896!important;border-radius:10px!important; }
