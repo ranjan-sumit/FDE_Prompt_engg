@@ -537,31 +537,52 @@ Ticket: {ticket}
 
 Reasoning and Category:"""
 
-    # Strategy headers + prompt preview
+    # ── Init session state ──────────────────────────────────────────────────
+    if "battle_results" not in st.session_state:
+        st.session_state["battle_results"] = None
+
+    # Read results BEFORE creating columns so we can render everything in one pass
+    battle_res = st.session_state["battle_results"]
+
+    # ── Single column pass — header + prompt + output all in same column ────
     col_z, col_f, col_c = st.columns(3)
-    strategies = [
-        (col_z, "ZERO-SHOT",        "#00C8F0", ZERO_SHOT,  "No examples. Just ask."),
-        (col_f, "FEW-SHOT",         "#7B2FBE", FEW_SHOT,   "3 labeled examples in XML tags."),
-        (col_c, "CHAIN-OF-THOUGHT", "#00C896", COT,        "Think step by step."),
+
+    col_data = [
+        (col_z, "ZERO-SHOT",        "#00C8F0", ZERO_SHOT,  "No examples. Just ask.",           0),
+        (col_f, "FEW-SHOT",         "#7B2FBE", FEW_SHOT,   "3 labeled examples in XML tags.",  1),
+        (col_c, "CHAIN-OF-THOUGHT", "#00C896", COT,        "Think step by step.",              2),
     ]
-    for col, label, color, prompt_text, tagline in strategies:
+
+    for col, label, color, prompt_text, tagline, idx in col_data:
         with col:
+            # Header
             st.markdown(
                 f'<div class="col-header" style="color:{color}">⚡ {label}</div>'
                 f'<div style="font-size:12px;color:#5A7A9A;margin-bottom:8px">{tagline}</div>',
                 unsafe_allow_html=True,
             )
+            # Prompt expander
             with st.expander("View prompt"):
                 st.code(prompt_text, language=None)
 
+            # Output — only if results exist for this index
+            if battle_res:
+                content, reasoning = battle_res[idx]
+                if reasoning:
+                    with st.expander("🧠 Model thinking"):
+                        st.markdown(
+                            f'<div class="thinking-box">{reasoning[:600]}...</div>',
+                            unsafe_allow_html=True,
+                        )
+                labels_map = {0: "ZERO-SHOT OUTPUT", 1: "FEW-SHOT OUTPUT", 2: "CoT OUTPUT"}
+                output_card(content, color, labels_map[idx])
+
+    # ── Run button — below columns ──────────────────────────────────────────
     st.markdown("")
     run_battle = st.button(
         "🚀 Run Battle — All 3 Strategies Simultaneously",
         type="primary", use_container_width=True,
     )
-
-    if "battle_results" not in st.session_state:
-        st.session_state["battle_results"] = None
 
     if run_battle:
         if not client:
@@ -581,26 +602,9 @@ Reasoning and Category:"""
                     st.session_state["battle_results"] = (
                         fz.result(), ff.result(), fc.result()
                     )
+            st.rerun()  # re-render so columns pick up the new results in one pass
 
-    if st.session_state.get("battle_results"):
-        rz, rf, rc = st.session_state["battle_results"]
-        col_z, col_f, col_c = st.columns(3)
-
-        for col, result, color, label in [
-            (col_z, rz, "#00C8F0", "ZERO-SHOT OUTPUT"),
-            (col_f, rf, "#7B2FBE", "FEW-SHOT OUTPUT"),
-            (col_c, rc, "#00C896", "CoT OUTPUT"),
-        ]:
-            with col:
-                content, reasoning = result
-                if reasoning:
-                    with st.expander("🧠 Model thinking"):
-                        st.markdown(
-                            f'<div class="thinking-box">{reasoning[:600]}...</div>',
-                            unsafe_allow_html=True,
-                        )
-                output_card(content, color, label)
-
+    if battle_res:
         st.success(
             "Battle complete!  Discuss: Which strategy gave the most reliable, "
             "interpretable answer? What would you actually ship?"
