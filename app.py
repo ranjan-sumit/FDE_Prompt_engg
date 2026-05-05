@@ -846,21 +846,47 @@ messages = [
             unsafe_allow_html=True,
         )
 
-    # Column headers
+    # ── Prompt preview + output columns ────────────────────────────────────
     col_n_hdr, col_h_hdr = st.columns(2)
+
     with col_n_hdr:
         st.markdown(
-            '<div class="col-header" style="color:#E53935">NAKED LLM — No System Prompt</div>',
+            '<div class="col-header" style="color:#E53935">☠️ NAKED LLM — No System Prompt</div>',
             unsafe_allow_html=True,
         )
+        # Show the exact messages array being sent
+        naked_prompt_display = f'''messages = [
+    {{
+        "role": "user",
+        "content": """{user_input}"""
+    }}
+]'''
+        with st.expander("📨 View exact prompt being sent"):
+            st.code(naked_prompt_display, language="python")
+
     with col_h_hdr:
         st.markdown(
-            '<div class="col-header" style="color:#00C896">HARNESSED LLM — With Guardrails</div>',
+            '<div class="col-header" style="color:#00C896">🛡️ HARNESSED LLM — With Guardrails</div>',
             unsafe_allow_html=True,
         )
+        # Show the exact messages array being sent
+        harnessed_prompt_display = f'''messages = [
+    {{
+        "role": "system",
+        "content": """
+{HARNESS_SYSTEM}
+"""
+    }},
+    {{
+        "role": "user",
+        "content": """{user_input}"""
+    }}
+]'''
+        with st.expander("📨 View exact prompt being sent"):
+            st.code(harnessed_prompt_display, language="python")
 
     fire_btn = st.button(
-        "Fire Both Models Simultaneously",
+        "⚡ Fire Both Models Simultaneously",
         type="primary", use_container_width=True,
     )
 
